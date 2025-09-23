@@ -3,11 +3,11 @@ LangChain Tools Collection
 Tools for various agent examples including search, calculation, analysis, etc.
 """
 
+
 from langchain_core.tools import tool
 
-
 # ============================================================================
-# BASIC TOOLS
+# TOOLS ORDERED BY USAGE IN AGENTS.PY
 # ============================================================================
 
 @tool
@@ -25,10 +25,6 @@ def calculate(expression: str) -> str:
     except Exception as e:
         return f"Error: {str(e)}"
 
-
-# ============================================================================
-# WEB AND RESEARCH TOOLS
-# ============================================================================
 
 @tool
 def web_search(query: str) -> str:
@@ -49,26 +45,6 @@ def research_tool(topic: str) -> str:
 
 
 @tool
-def slow_research(topic: str) -> str:
-    """Simulate a research operation that takes time."""
-    import time
-    time.sleep(1)  # Simulate processing time
-    return f"Completed comprehensive research on: {topic}"
-
-
-@tool
-def analyze_market(market: str) -> str:
-    """Simulate market analysis."""
-    import time
-    time.sleep(0.8)
-    return f"Market analysis complete for {market}: Showing positive trends"
-
-
-# ============================================================================
-# UTILITY TOOLS
-# ============================================================================
-
-@tool
 def search(query: str) -> str:
     """Search for information."""
     return f"Results for: {query}"
@@ -86,10 +62,6 @@ def extract_contact(text: str) -> str:
     return f"Analyzing text for contact information: {text}"
 
 
-# ============================================================================
-# MEMORY AND PREFERENCE TOOLS
-# ============================================================================
-
 @tool
 def remember_preference(key: str, value: str) -> str:
     """Remember a user preference."""
@@ -102,10 +74,6 @@ def get_personalized_help(topic: str) -> str:
     return f"Providing personalized help for {topic} based on your preferences"
 
 
-# ============================================================================
-# SECURITY AND CONTENT TOOLS
-# ============================================================================
-
 @tool
 def sensitive_info_tool(query: str) -> str:
     """Tool that might return sensitive information."""
@@ -114,9 +82,28 @@ def sensitive_info_tool(query: str) -> str:
     return f"Public information about: {query}"
 
 
-# ============================================================================
-# ADVANCED CALCULATION TOOLS
-# ============================================================================
+@tool
+def slow_research(topic: str) -> str:
+    """Simulate a research operation that takes time."""
+    import time
+    time.sleep(1)  # Simulate processing time
+    return f"Completed comprehensive research on: {topic}"
+
+
+@tool
+def analyze_market(market: str) -> str:
+    """Simulate market analysis."""
+    import time
+    time.sleep(0.8)
+    return f"Market analysis complete for {market}: Showing positive trends"
+
+
+@tool
+def web_search_production(query: str) -> str:
+    """Search the web for current information."""
+    # In production, this would call actual search APIs
+    return f"🔍 Web search results for '{query}': Found recent articles, data, and expert opinions"
+
 
 @tool
 def calculate_advanced(expression: str) -> str:
@@ -132,10 +119,6 @@ def calculate_advanced(expression: str) -> str:
     except Exception as e:
         return f"❌ Calculation error: {str(e)}"
 
-
-# ============================================================================
-# TEXT ANALYSIS TOOLS
-# ============================================================================
 
 @tool
 def analyze_text(text: str) -> str:
@@ -159,14 +142,3 @@ def analyze_text(text: str) -> str:
         sentiment = "Neutral"
     
     return f"📊 Text Analysis: {word_count} words, {char_count} characters. Sentiment: {sentiment} ({positive_score} positive, {negative_score} negative indicators)"
-
-
-# ============================================================================
-# PRODUCTION WEB SEARCH TOOL
-# ============================================================================
-
-@tool
-def web_search_production(query: str) -> str:
-    """Search the web for current information."""
-    # In production, this would call actual search APIs
-    return f"🔍 Web search results for '{query}': Found recent articles, data, and expert opinions"

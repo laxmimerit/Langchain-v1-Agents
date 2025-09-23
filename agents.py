@@ -13,11 +13,13 @@ from typing import TypedDict, Dict, Any, List
 from typing_extensions import Annotated
 from pydantic import BaseModel
 
-from langchain_community.chat_models import ChatOllama
+from langchain_ollama import ChatOllama
 from langchain_core.messages import SystemMessage, AIMessage, RemoveMessage, ToolMessage
 from langchain.agents import create_agent, AgentState, ToolNode
 from langgraph.runtime import Runtime
 from langgraph.graph.message import add_messages, REMOVE_ALL_MESSAGES
+
+# import custom tools from tools.py
 import tools
 
 
@@ -1049,9 +1051,9 @@ def main():
     - Individual example failures: Continue with others
     - Comprehensive error reporting for debugging
     """
-    print("🚀 LangChain Agents with ChatOllama (Qwen3 + GPT-OSS)")
+    print("LangChain Agents with ChatOllama (Qwen3 + GPT-OSS)")
     print("=" * 70)
-    print("📚 This demo covers 11 comprehensive examples of LangChain agents:")
+    print("This demo covers 11 comprehensive examples of LangChain agents:")
     print("   1. Basic agent creation")
     print("   2. Model instance configuration") 
     print("   3. Dynamic model selection")
@@ -1067,7 +1069,7 @@ def main():
     
     try:
         # Test basic connectivity and model availability
-        print("\n🔍 Testing System Connectivity...")
+        print("\n[INFO] Testing System Connectivity...")
         
         print("  • Testing Qwen3 model...")
         qwen3_test = ChatOllama(model="qwen3", num_predict=20)
@@ -1213,8 +1215,8 @@ def main():
         print("   Robust error handling and validation included")
         
     except Exception as e:
-        print(f"\n❌ System Connection Failed: {str(e)}")
-        print("\n🔧 Troubleshooting Steps:")
+        print(f"\n[ERROR] System Connection Failed: {str(e)}")
+        print("\n[HELP] Troubleshooting Steps:")
         print("1. Ensure Ollama is running:")
         print("   ollama serve")
         print("\n2. Install required models:")
