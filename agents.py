@@ -14,11 +14,11 @@ from typing_extensions import Annotated
 from pydantic import BaseModel
 
 from langchain_community.chat_models import ChatOllama
-from langchain_core.tools import tool
 from langchain_core.messages import SystemMessage, AIMessage, RemoveMessage, ToolMessage
 from langchain.agents import create_agent, AgentState, ToolNode
 from langgraph.runtime import Runtime
 from langgraph.graph.message import add_messages, REMOVE_ALL_MESSAGES
+import tools
 
 
 # ============================================================================
@@ -48,15 +48,11 @@ def example_1_basic_agent_with_model_string():
     print("📝 This example shows the simplest way to create an agent using a model string.")
     print("   The agent will use Qwen3 through Ollama with default parameters.")
     
-    @tool
-    def simple_search(query: str) -> str:
-        """Search for information."""
-        return f"Found results for: {query}"
     
     # Using Ollama provider with Qwen3 model - simplest approach
     agent = create_agent(
         "ollama:qwen3",  # Model string format: provider:model
-        tools=[simple_search]
+        tools=[tools.simple_search]
     )
     
     # Simplified message format as requested
@@ -91,14 +87,6 @@ def example_2_agent_with_model_instance():
     print("🔧 This example shows how to create an agent with custom model configuration.")
     print("   You have full control over temperature, token limits, and other parameters.")
     
-    @tool
-    def calculate(expression: str) -> str:
-        """Perform mathematical calculations."""
-        try:
-            result = eval(expression)
-            return f"The result is {result}"
-        except Exception as e:
-            return f"Error: {str(e)}"
     
     # Create model instance with custom parameters
     model = ChatOllama(
@@ -108,7 +96,7 @@ def example_2_agent_with_model_instance():
         timeout=30            # 30 second timeout
     )
     
-    agent = create_agent(model, tools=[calculate])
+    agent = create_agent(model, tools=[tools.calculate])
     
     # Simplified message format
     result = agent.invoke({
@@ -149,17 +137,8 @@ def example_3_dynamic_model_selection():
     print("🔄 This example demonstrates automatic model switching based on conversation length.")
     print("   Short conversations use Qwen3, longer ones automatically upgrade to GPT-OSS.")
     
-    @tool
-    def web_search(query: str) -> str:
-        """Search the web for information."""
-        return f"Web search results for '{query}': Found comprehensive information"
     
-    @tool
-    def analyze_data(data: str) -> str:
-        """Analyze provided data."""
-        return f"Analysis of '{data}': Shows interesting patterns and trends"
-    
-    tools = [web_search, analyze_data]
+    tool_list = [tools.web_search, tools.analyze_data]
     
     def select_model(state: AgentState, runtime: Runtime) -> ChatOllama:
         """Choose between Qwen3 and GPT-OSS based on conversation length."""
@@ -168,12 +147,12 @@ def example_3_dynamic_model_selection():
         
         if message_count < 10:
             print(f"  🟢 Using Qwen3 for {message_count} messages (efficient)")
-            return ChatOllama(model="qwen3", temperature=0.1).bind_tools(tools)
+            return ChatOllama(model="qwen3", temperature=0.1).bind_tools(tool_list)
         else:
             print(f"  🔵 Switching to GPT-OSS for {message_count} messages (advanced)")
-            return ChatOllama(model="gpt-oss", temperature=0.0, num_predict=2000).bind_tools(tools)
+            return ChatOllama(model="gpt-oss", temperature=0.0, num_predict=2000).bind_tools(tool_list)
     
-    agent = create_agent(select_model, tools=tools)
+    agent = create_agent(select_model, tools=tool_list)
     
     # Test 1: Short conversation (Qwen3)
     print("\n📝 Testing short conversation:")
@@ -187,7 +166,7 @@ def example_3_dynamic_model_selection():
     long_messages = "This is message number 12 in our conversation. I need complex analysis."
     
     # Simulate conversation state with many messages
-    agent_with_history = create_agent(select_model, tools=tools)
+    agent_with_history = create_agent(select_model, tools=tool_list)
     result2 = agent_with_history.invoke({
         "messages": [f"Message {i}" for i in range(12)] + [long_messages]
     })
@@ -230,12 +209,8 @@ def example_4_advanced_model_selection():
     print("🧠 This example uses intelligent analysis of message content, not just count.")
     print("   It detects complexity through keywords, length, and context.")
     
-    @tool
-    def research_tool(topic: str) -> str:
-        """Research a complex topic."""
-        return f"Detailed research on {topic}: Multiple perspectives and data points"
     
-    tools = [research_tool]
+    tool_list = [tools.research_tool]
     
     def intelligent_model_select(state: AgentState, runtime: Runtime) -> ChatOllama:
         """Intelligent model selection based on multiple factors."""
@@ -257,12 +232,12 @@ def example_4_advanced_model_selection():
         # Multi-factor decision logic
         if total_length > 3000 or has_complex_content or message_count > 8:
             print(f"  🔵 GPT-OSS selected: {message_count} msgs, {total_length} chars, complex_keywords: {has_complex_content}")
-            return ChatOllama(model="gpt-oss", temperature=0.0, num_predict=2500).bind_tools(tools)
+            return ChatOllama(model="gpt-oss", temperature=0.0, num_predict=2500).bind_tools(tool_list)
         else:
             print(f"  🟢 Qwen3 selected: {message_count} msgs, {total_length} chars, complex_keywords: {has_complex_content}")
-            return ChatOllama(model="qwen3", temperature=0.1, num_predict=1000).bind_tools(tools)
+            return ChatOllama(model="qwen3", temperature=0.1, num_predict=1000).bind_tools(tool_list)
     
-    agent = create_agent(intelligent_model_select, tools=tools)
+    agent = create_agent(intelligent_model_select, tools=tool_list)
     
     # Test 1: Simple query (should use Qwen3)
     print("\n📝 Testing simple query:")
@@ -314,29 +289,17 @@ def example_5_tool_configurations():
     print("🛠️  This example shows two ways to configure tools and error handling.")
     print("   Method 1: Simple list | Method 2: Advanced ToolNode with error handling")
     
-    @tool
-    def search(query: str) -> str:
-        """Search for information."""
-        return f"Results for: {query}"
-    
-    @tool
-    def calculate(expression: str) -> str:
-        """Perform calculations."""
-        try:
-            return f"Result: {eval(expression)}"
-        except:
-            return "Invalid expression"
     
     model = ChatOllama(model="qwen3")
     
     # Method 1: Pass list of tools (simple approach)
     print("\n🔧 Method 1: Simple list of tools")
-    agent1 = create_agent(model, tools=[search, calculate])
+    agent1 = create_agent(model, tools=[tools.search, tools.calculate])
     
     # Method 2: Use ToolNode with error handling (advanced approach)
     print("🔧 Method 2: ToolNode with custom error handling")
     tool_node = ToolNode(
-        tools=[search, calculate],
+        tools=[tools.search, tools.calculate],
         handle_tool_errors="Please check your input and try again. Error details will help you correct the issue."
     )
     agent2 = create_agent(model, tools=tool_node)
@@ -393,10 +356,6 @@ def example_6_prompt_configurations():
     print("📝 This example demonstrates different ways to set up agent prompts.")
     print("   String → SystemMessage → Dynamic callable prompts")
     
-    @tool
-    def helper_tool(request: str) -> str:
-        """General helper tool."""
-        return f"Helping with: {request}"
     
     model = ChatOllama(model="qwen3")
     
@@ -404,7 +363,7 @@ def example_6_prompt_configurations():
     print("\n🔤 Method 1: Simple string prompt")
     agent1 = create_agent(
         model,
-        [helper_tool],
+        [tools.helper_tool],
         prompt="You are a helpful assistant. Be concise and accurate in your responses."
     )
     
@@ -412,7 +371,7 @@ def example_6_prompt_configurations():
     print("💬 Method 2: SystemMessage prompt")
     agent2 = create_agent(
         model,
-        [helper_tool],
+        [tools.helper_tool],
         prompt=SystemMessage(content="You are a research assistant. Always cite your sources and provide detailed explanations.")
     )
     
@@ -427,7 +386,7 @@ def example_6_prompt_configurations():
         )
         return [system_msg] + state["messages"]
     
-    agent3 = create_agent(model, [helper_tool], prompt=dynamic_prompt)
+    agent3 = create_agent(model, [tools.helper_tool], prompt=dynamic_prompt)
     
     # Test all three agents
     test_question = "Help me understand artificial intelligence"
@@ -493,17 +452,13 @@ def example_7_structured_output():
         phone: str
         company: str = "Unknown"  # Default value if not found
     
-    @tool
-    def extract_contact(text: str) -> str:
-        """Extract contact information from text."""
-        return f"Analyzing text for contact information: {text}"
     
     model = ChatOllama(model="qwen3")
     
     # Create agent with structured output requirement
     agent = create_agent(
         model,
-        tools=[extract_contact],
+        tools=[tools.extract_contact],
         response_format=ContactInfo  # This forces structured output
     )
     
@@ -574,22 +529,13 @@ def example_8_custom_state():
         user_preferences: dict = {}              # Custom: user's preferences
         session_data: dict = {}                  # Custom: temporary session info
     
-    @tool
-    def remember_preference(key: str, value: str) -> str:
-        """Remember a user preference."""
-        return f"I'll remember that you prefer {key}: {value}"
-    
-    @tool
-    def get_personalized_help(topic: str) -> str:
-        """Provide help based on user preferences."""
-        return f"Providing personalized help for {topic} based on your preferences"
     
     model = ChatOllama(model="qwen3")
     
     # Create agent with custom state schema
     agent = create_agent(
         model,
-        tools=[remember_preference, get_personalized_help],
+        tools=[tools.remember_preference, tools.get_personalized_help],
         state_schema=CustomAgentState  # This enables custom state tracking
     )
     
@@ -663,12 +609,6 @@ def example_9_hooks():
     print("🎣 This example shows custom processing before and after model execution.")
     print("   Pre-hook: Trims long conversations | Post-hook: Filters sensitive content")
     
-    @tool
-    def sensitive_info_tool(query: str) -> str:
-        """Tool that might return sensitive information."""
-        if "password" in query.lower():
-            return "CONFIDENTIAL: The password is admin123"
-        return f"Public information about: {query}"
     
     def trim_messages(state):
         """Pre-model hook: Trim conversation to manage context window."""
@@ -715,7 +655,7 @@ def example_9_hooks():
     # Create agent with both pre and post hooks
     agent = create_agent(
         model,
-        tools=[sensitive_info_tool],
+        tools=[tools.sensitive_info_tool],
         pre_model_hook=trim_messages,      # Runs before model processing
         post_model_hook=validate_response  # Runs after model generates response
     )
@@ -781,22 +721,9 @@ def example_10_streaming():
     print("📡 This example demonstrates real-time streaming of agent responses.")
     print("   You can see tool calls, reasoning, and responses as they happen.")
     
-    @tool
-    def slow_research(topic: str) -> str:
-        """Simulate a research operation that takes time."""
-        import time
-        time.sleep(1)  # Simulate processing time
-        return f"Completed comprehensive research on: {topic}"
-    
-    @tool
-    def analyze_market(market: str) -> str:
-        """Simulate market analysis."""
-        import time
-        time.sleep(0.8)
-        return f"Market analysis complete for {market}: Showing positive trends"
     
     model = ChatOllama(model="qwen3")
-    agent = create_agent(model, tools=[slow_research, analyze_market])
+    agent = create_agent(model, tools=[tools.slow_research, tools.analyze_market])
     
     query = "Research AI market trends and analyze the technology sector"
     print(f"📝 Query: {query}")
@@ -872,49 +799,6 @@ def example_11_complete_real_world():
     print("🏢 This example demonstrates a full-featured agent combining all concepts.")
     print("   Multi-model selection + comprehensive tools + state management + hooks")
     
-    # Define comprehensive tool suite
-    @tool
-    def web_search(query: str) -> str:
-        """Search the web for current information."""
-        # In production, this would call actual search APIs
-        return f"🔍 Web search results for '{query}': Found recent articles, data, and expert opinions"
-    
-    @tool
-    def calculate_advanced(expression: str) -> str:
-        """Perform advanced mathematical calculations safely."""
-        try:
-            # Production-safe evaluation (whitelist approach)
-            allowed_chars = set('0123456789+-*/.() ')
-            if all(c in allowed_chars for c in expression):
-                result = eval(expression)
-                return f"🧮 Calculation: {expression} = {result}"
-            else:
-                return "❌ Invalid expression: only basic math operations (+, -, *, /, parentheses) allowed"
-        except Exception as e:
-            return f"❌ Calculation error: {str(e)}"
-    
-    @tool
-    def analyze_text(text: str) -> str:
-        """Analyze text for insights, sentiment, and key information."""
-        word_count = len(text.split())
-        char_count = len(text)
-        
-        # Basic sentiment analysis (in production, use proper NLP libraries)
-        positive_words = ['good', 'great', 'excellent', 'amazing', 'wonderful']
-        negative_words = ['bad', 'terrible', 'awful', 'horrible', 'disappointing']
-        
-        text_lower = text.lower()
-        positive_score = sum(1 for word in positive_words if word in text_lower)
-        negative_score = sum(1 for word in negative_words if word in text_lower)
-        
-        if positive_score > negative_score:
-            sentiment = "Positive"
-        elif negative_score > positive_score:
-            sentiment = "Negative" 
-        else:
-            sentiment = "Neutral"
-        
-        return f"📊 Text Analysis: {word_count} words, {char_count} characters. Sentiment: {sentiment} ({positive_score} positive, {negative_score} negative indicators)"
     
     # Enhanced state management for production use
     class ProductionAgentState(AgentState):
@@ -1000,7 +884,7 @@ def example_11_complete_real_world():
             print(f"  🟢 Selected Qwen3: simple query, efficient processing")
         
         return ChatOllama(model=model_name, **model_params).bind_tools([
-            web_search, calculate_advanced, analyze_text
+            tools.web_search_production, tools.calculate_advanced, tools.analyze_text
         ])
     
     # Context-aware preprocessing with user personalization
@@ -1055,7 +939,7 @@ def example_11_complete_real_world():
     # Create the production-ready agent
     agent = create_agent(
         select_optimal_model,
-        tools=[web_search, calculate_advanced, analyze_text],
+        tools=[tools.web_search_production, tools.calculate_advanced, tools.analyze_text],
         state_schema=ProductionAgentState,
         pre_model_hook=context_preprocessor,
         post_model_hook=production_validator,
