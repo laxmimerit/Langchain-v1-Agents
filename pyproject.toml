@@ -1,0 +1,13 @@
+[project]
+name = "langchain-v1-agents"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "langchain>=1.0.0a7",
+    "langchain-chroma>=0.2.6",
+    "langchain-community>=0.3.29",
+    "langchain-core>=0.4.0.dev0",
+    "langchain-ollama>=0.3.8",
+]
