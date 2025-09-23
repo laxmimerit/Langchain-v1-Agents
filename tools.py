@@ -2,13 +2,8 @@
 LangChain Tools Collection
 Tools for various agent examples including search, calculation, analysis, etc.
 """
-
-
 from langchain_core.tools import tool
 
-# ============================================================================
-# TOOLS ORDERED BY USAGE IN AGENTS.PY
-# ============================================================================
 
 @tool
 def simple_search(query: str) -> str:
