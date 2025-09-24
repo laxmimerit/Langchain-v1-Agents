@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python test:*)",
+      "Bash(python:*)",
+      "Bash(del:*)",
+      "Bash(rm:*)",
+      "WebFetch(domain:python.langchain.com)",
+      "Bash(pip install:*)",
+      "Bash(uv sync:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

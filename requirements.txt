@@ -1,0 +1,8 @@
+langchain>=1.0.0a7
+langchain-chroma>=0.2.6
+langchain-community>=0.3.29
+langchain-core>=0.4.0.dev0
+langchain-ollama>=0.3.8
+
+# Additional dependencies for production tools
+psutil>=5.9.0  # For system information
