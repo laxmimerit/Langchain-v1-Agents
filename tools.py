@@ -32,35 +32,6 @@ config = ToolConfig()
 # ============================================================================
 
 @tool
-def simple_search(query: str) -> str:
-    """Simple web search using DuckDuckGo."""
-    
-    try:
-        with DDGS() as ddgs:
-            results = list(ddgs.text(
-                keywords=query,
-                max_results=3,
-                region="us-en",
-                timelimit="d"
-            ))
-        
-        if not results:
-            return f"🔍 No results found for '{query}'"
-        
-        formatted_results = [f"🔍 Search Results for '{query}':\n"]
-        for i, result in enumerate(results, 1):
-            title = result.get('title', 'No title')
-            body = result.get('body', 'No description available')
-            href = result.get('href', '')
-            formatted_results.append(f"{i}. **{title}**\n   {body}\n   🔗 {href}")
-        
-        return "\n\n".join(formatted_results)
-    
-    except Exception as e:
-        return f"❌ Search error: {str(e)}"
-
-
-@tool
 def web_search(query: str, num_results: int = 5) -> str:
     """Web search using DuckDuckGo with configurable result count."""
     
@@ -90,36 +61,93 @@ def web_search(query: str, num_results: int = 5) -> str:
 
 
 @tool
-def analyze_data(data: str) -> str:
-    """Basic data analysis with summary statistics."""
-    try:
-        lines = [line.strip() for line in data.split('\n') if line.strip()]
-        
-        if not lines:
-            return "❌ No data to analyze"
-        
-        # Basic statistics
-        total_lines = len(lines)
-        total_chars = len(data)
-        avg_line_length = sum(len(line) for line in lines) / len(lines)
-        longest_line = max(len(line) for line in lines)
-        shortest_line = min(len(line) for line in lines)
-        
-        return f"""📊 Data Summary:
-📝 Total lines: {total_lines}
-📄 Total characters: {total_chars}
-🔤 Average line length: {avg_line_length:.1f} characters
-📏 Longest line: {longest_line} characters
-📐 Shortest line: {shortest_line} characters"""
+def analyze_data(data: list, operation: str) -> str:
+    """
+    Dynamic pandas data analysis tool.
     
+    Args:
+        data: List of dictionaries to convert to DataFrame
+        operation: Pandas operation string (e.g., 'df.describe()', 'df.groupby("col").sum()')
+    
+    Returns:
+        String representation of analysis result or error message
+    """
+    try:
+        import pandas as pd
+        import numpy as np
+    except ImportError as e:
+        return f"❌ Missing dependency: {e}"
+    
+    try:
+        if not data or not isinstance(data, list):
+            return "❌ Data must be a non-empty list"
+        
+        # Convert to DataFrame
+        try:
+            df = pd.DataFrame(data)
+        except Exception as e:
+            return f"❌ Failed to create DataFrame: {str(e)}"
+        
+        if df.empty:
+            return "❌ Empty DataFrame created"
+        
+        # Default operation
+        if not operation or not isinstance(operation, str):
+            operation = "df.describe()"
+        
+        # Basic validation - operation should reference 'df'
+        if 'df' not in operation:
+            return "❌ Operation must reference 'df' (the DataFrame)"
+        
+        # Execute operation with restricted namespace
+        namespace = {'df': df, 'pd': pd, 'np': np}
+        result = eval(operation, {"__builtins__": {}}, namespace)
+        
+        # Format result
+        if isinstance(result, (pd.DataFrame, pd.Series)):
+            return result.to_string()
+        else:
+            return str(result)
+            
+    except SyntaxError:
+        return "❌ Invalid operation syntax"
+    except NameError as e:
+        return f"❌ Invalid reference: {e}"
     except Exception as e:
-        return f"❌ Analysis error: {str(e)}"
+        return f"❌ Error: {str(e)}"
 
 
 @tool
 def calculate(expression: str) -> str:
-    """Safely evaluate mathematical expressions."""
+    """
+    Safely evaluate mathematical expressions using AST parsing.
+    
+    Supports basic arithmetic, mathematical functions, and constants.
+    Uses Abstract Syntax Tree (AST) validation for security.
+    
+    Args:
+        expression: Mathematical expression string to evaluate
+    
+    Supported Operations:
+        - Arithmetic: +, -, *, /, %, **
+        - Functions: abs, round, min, max, sum, pow, sqrt
+        - Trigonometry: sin, cos, tan
+        - Logarithms: log
+        - Constants: pi, e
+    
+    Examples:
+        calculate("2 + 3 * 4")           → "2 + 3 * 4 = 14"
+        calculate("sqrt(16) + pow(2,3)") → "sqrt(16) + pow(2,3) = 12.0"
+        calculate("sin(pi/2)")           → "sin(pi/2) = 1.0"
+        calculate("max(1,2,3) * 5")      → "max(1,2,3) * 5 = 15"
+    
+    Returns:
+        String with calculation result or error message
+    """
     try:
+        import ast
+        import math
+        
         # Parse the expression into an AST
         node = ast.parse(expression, mode='eval')
         
@@ -132,7 +160,6 @@ def calculate(expression: str) -> str:
         }
         
         # Define allowed functions
-        import math
         allowed_functions = {
             'abs': abs, 'round': round, 'min': min, 'max': max, 'sum': sum, 'pow': pow,
             'sqrt': lambda x: x ** 0.5,
@@ -143,21 +170,20 @@ def calculate(expression: str) -> str:
         # Check if all nodes are allowed
         for node_item in ast.walk(node):
             if type(node_item) not in allowed_nodes:
-                return f"❌ Unsupported operation: {type(node_item).__name__}"
+                return f"Error: Unsupported operation: {type(node_item).__name__}"
         
         # Evaluate safely
         result = eval(compile(node, '<string>', 'eval'), 
                      {"__builtins__": {}}, allowed_functions)
         
-        return f"🧮 {expression} = {result}"
+        return f"{expression} = {result}"
     
     except SyntaxError:
-        return "❌ Invalid mathematical expression"
+        return "Error: Invalid mathematical expression"
     except ZeroDivisionError:
-        return "❌ Division by zero error"
+        return "Error: Division by zero"
     except Exception as e:
-        return f"❌ Calculation error: {str(e)}"
-
+        return f"Error: {str(e)}"
 
 @tool
 def helper_tool(request: str) -> str:
@@ -208,7 +234,7 @@ def sensitive_info_tool(query: str) -> str:
         return "I cannot provide sensitive or confidential information. Please ask for public information only."
     return f"Public information about: {query}"
 
-
+## replace with ddgs news search
 @tool
 def slow_research(topic: str) -> str:
     """Simulate a research operation that takes time."""
@@ -216,7 +242,7 @@ def slow_research(topic: str) -> str:
     time.sleep(1)  # Simulate processing time
     return f"Completed comprehensive research on: {topic}. Found multiple data points and analysis perspectives."
 
-
+## use here crawl4ai to get the full data after ddgs returns the basic results with the link
 @tool
 def analyze_market(market: str) -> str:
     """Simulate market analysis with processing time."""

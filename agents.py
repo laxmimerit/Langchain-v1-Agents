@@ -54,7 +54,7 @@ def example_1_basic_agent_with_model_string():
     # Using Ollama provider with Qwen3 model - simplest approach
     agent = create_agent(
         "ollama:qwen3",  # Model string format: provider:model
-        tools=[tools.simple_search]
+        tools=[tools.web_search]
     )
     
     # Simplified message format as requested
