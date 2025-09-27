@@ -40,13 +40,7 @@ def web_search(query: str, num_results: int = 5) -> str:
     """
     
     try:
-        with DDGS() as ddgs:
-            results = list(ddgs.text(
-                keywords=query,
-                max_results=num_results,
-                region="us-en",
-                timelimit="d"
-            ))
+        results = list(DDGS.text(query=query,max_results=num_results,region="us-en",timelimit="d"))
         
         if not results:
             return f"No results found for '{query}'"
