@@ -2,19 +2,15 @@
 Simplified LangChain Tools Collection
 Only tools that are actually used in agents.py, in the correct order.
 """
-import ast
 import json
-import os
 import re
 import tempfile
 from pathlib import Path
-from typing import Optional
 
 from langchain_core.tools import tool
 
 # DuckDuckGo search integration
 from ddgs import DDGS
-
 
 # Configuration
 class ToolConfig:
@@ -33,7 +29,15 @@ config = ToolConfig()
 
 @tool
 def web_search(query: str, num_results: int = 5) -> str:
-    """Web search using DuckDuckGo with configurable result count."""
+    """Search the web using DuckDuckGo.
+    
+    Args:
+        query: Search query string
+        num_results: Number of results to return (default: 5)
+    
+    Returns:
+        Formatted search results with titles, descriptions, and URLs
+    """
     
     try:
         with DDGS() as ddgs:
@@ -45,19 +49,19 @@ def web_search(query: str, num_results: int = 5) -> str:
             ))
         
         if not results:
-            return f"🔍 No results found for '{query}'"
+            return f"No results found for '{query}'"
         
-        formatted_results = [f"🔍 Search Results for '{query}':\n"]
+        formatted_results = [f"Search Results for '{query}':\n"]
         for i, result in enumerate(results, 1):
             title = result.get('title', 'No title')
             body = result.get('body', 'No description available')
             href = result.get('href', '')
-            formatted_results.append(f"{i}. **{title}**\n   {body}\n   🔗 {href}")
+            formatted_results.append(f"{i}. **{title}**\n   {body}\n   {href}")
         
         return "\n\n".join(formatted_results)
     
     except Exception as e:
-        return f"❌ Search error: {str(e)}"
+        return f"Search error: {str(e)}"
 
 
 @tool
@@ -76,20 +80,20 @@ def analyze_data(data: list, operation: str) -> str:
         import pandas as pd
         import numpy as np
     except ImportError as e:
-        return f"❌ Missing dependency: {e}"
+        return f"Missing dependency: {e}"
     
     try:
         if not data or not isinstance(data, list):
-            return "❌ Data must be a non-empty list"
+            return "Data must be a non-empty list"
         
         # Convert to DataFrame
         try:
             df = pd.DataFrame(data)
         except Exception as e:
-            return f"❌ Failed to create DataFrame: {str(e)}"
+            return f"Failed to create DataFrame: {str(e)}"
         
         if df.empty:
-            return "❌ Empty DataFrame created"
+            return "Empty DataFrame created"
         
         # Default operation
         if not operation or not isinstance(operation, str):
@@ -97,7 +101,7 @@ def analyze_data(data: list, operation: str) -> str:
         
         # Basic validation - operation should reference 'df'
         if 'df' not in operation:
-            return "❌ Operation must reference 'df' (the DataFrame)"
+            return "Operation must reference 'df' (the DataFrame)"
         
         # Execute operation with restricted namespace
         namespace = {'df': df, 'pd': pd, 'np': np}
@@ -110,39 +114,24 @@ def analyze_data(data: list, operation: str) -> str:
             return str(result)
             
     except SyntaxError:
-        return "❌ Invalid operation syntax"
+        return "Invalid operation syntax"
     except NameError as e:
-        return f"❌ Invalid reference: {e}"
+        return f"Invalid reference: {e}"
     except Exception as e:
-        return f"❌ Error: {str(e)}"
+        return f"Error: {str(e)}"
 
 
 @tool
 def calculate(expression: str) -> str:
-    """
-    Safely evaluate mathematical expressions using AST parsing.
-    
-    Supports basic arithmetic, mathematical functions, and constants.
-    Uses Abstract Syntax Tree (AST) validation for security.
+    """Safely evaluate mathematical expressions using AST parsing.
     
     Args:
         expression: Mathematical expression string to evaluate
     
-    Supported Operations:
-        - Arithmetic: +, -, *, /, %, **
-        - Functions: abs, round, min, max, sum, pow, sqrt
-        - Trigonometry: sin, cos, tan
-        - Logarithms: log
-        - Constants: pi, e
-    
-    Examples:
-        calculate("2 + 3 * 4")           → "2 + 3 * 4 = 14"
-        calculate("sqrt(16) + pow(2,3)") → "sqrt(16) + pow(2,3) = 12.0"
-        calculate("sin(pi/2)")           → "sin(pi/2) = 1.0"
-        calculate("max(1,2,3) * 5")      → "max(1,2,3) * 5 = 15"
-    
     Returns:
         String with calculation result or error message
+        
+    Supports arithmetic, math functions (sin, cos, sqrt, log), and constants (pi, e)
     """
     try:
         import ast
@@ -187,13 +176,28 @@ def calculate(expression: str) -> str:
 
 @tool
 def helper_tool(request: str) -> str:
-    """General helper tool for various requests."""
+    """General helper tool for various assistance requests.
+    
+    Args:
+        request: Description of what help is needed
+        
+    Returns:
+        Response offering to help with the specific request
+    """
     return f"I can help you with: {request}. What specific assistance do you need?"
 
 
 @tool
 def save_user_preference(key: str, value: str) -> str:
-    """Save a user preference."""
+    """Save a user preference to persistent storage.
+    
+    Args:
+        key: Preference key name
+        value: Preference value
+        
+    Returns:
+        Success message or error description
+    """
     try:
         config.user_preferences[key] = value
         
@@ -202,14 +206,21 @@ def save_user_preference(key: str, value: str) -> str:
         with open(prefs_file, 'w') as f:
             json.dump(config.user_preferences, f, indent=2)
         
-        return f"✅ Saved preference: {key} = {value}"
+        return f"Saved preference: {key} = {value}"
     except Exception as e:
-        return f"❌ Error saving preference: {str(e)}"
+        return f"Error saving preference: {str(e)}"
 
 
 @tool
 def get_user_preference(key: str) -> str:
-    """Retrieve a saved user preference."""
+    """Retrieve a saved user preference from storage.
+    
+    Args:
+        key: Preference key name to retrieve
+        
+    Returns:
+        Preference value or error message if not found
+    """
     try:
         # Load from file if not in memory
         if not config.user_preferences:
@@ -219,16 +230,23 @@ def get_user_preference(key: str) -> str:
                     config.user_preferences = json.load(f)
         
         if key in config.user_preferences:
-            return f"📋 {key}: {config.user_preferences[key]}"
+            return f"{key}: {config.user_preferences[key]}"
         else:
-            return f"❌ No preference found for: {key}"
+            return f"No preference found for: {key}"
     except Exception as e:
-        return f"❌ Error retrieving preference: {str(e)}"
+        return f"Error retrieving preference: {str(e)}"
 
 
 @tool
 def sensitive_info_tool(query: str) -> str:
-    """Tool that demonstrates security handling."""
+    """Handle queries while filtering sensitive information requests.
+    
+    Args:
+        query: Information query to process
+        
+    Returns:
+        Public information or security warning for sensitive queries
+    """
     sensitive_keywords = ["password", "secret", "confidential", "private"]
     if any(word in query.lower() for word in sensitive_keywords):
         return "I cannot provide sensitive or confidential information. Please ask for public information only."
@@ -237,7 +255,14 @@ def sensitive_info_tool(query: str) -> str:
 ## replace with ddgs news search
 @tool
 def latest_news(topic: str) -> str:
-    """Simulate a research operation that takes time."""
+    """Get latest news articles on a specific topic using DuckDuckGo.
+    
+    Args:
+        topic: News topic to search for
+        
+    Returns:
+        Latest news articles or no results message
+    """
     from ddgs import DDGS
     import time
     time.sleep(1)  # Simulate processing time
@@ -249,7 +274,14 @@ def latest_news(topic: str) -> str:
     return response
 @tool
 def analyze_market(url: str) -> str:
-    """Fetch the full content from the URL using Docling."""
+    """Fetch and analyze web content from a URL.
+    
+    Args:
+        url: Web URL to fetch content from
+        
+    Returns:
+        Full content fetched from the URL
+    """
 
     from ollama import web_fetch
     
@@ -259,9 +291,16 @@ def analyze_market(url: str) -> str:
 
 @tool
 def analyze_text(text: str) -> str:
-    """Basic text analysis including word count and simple sentiment."""
+    """Analyze text for basic statistics and sentiment.
+    
+    Args:
+        text: Text content to analyze
+        
+    Returns:
+        Text analysis with word count, sentence count, and basic sentiment
+    """
     if not text.strip():
-        return "❌ Empty text provided"
+        return "Empty text provided"
     
     # Basic statistics
     words = text.split()
@@ -296,15 +335,22 @@ def analyze_text(text: str) -> str:
     else:
         sentiment = "Neutral"
     
-    return f"""📊 Text Analysis Results:
-📝 Words: {word_count} | Characters: {char_count} | Sentences: {sentence_count}
-📖 Avg words/sentence: {avg_words_per_sentence:.1f}
-💭 Sentiment: {sentiment} (Score: {sentiment_score:+d})"""
+    return f"""Text Analysis Results:
+                Words: {word_count} | Characters: {char_count} | Sentences: {sentence_count}
+                Avg words/sentence: {avg_words_per_sentence:.1f}
+                Sentiment: {sentiment} (Score: {sentiment_score:+d})"""
 
 
 @tool
 def extract_contact(text: str) -> str:
-    """Extract contact information from text."""
+    """Extract contact information (emails, phones, URLs) from text.
+    
+    Args:
+        text: Text to extract contact information from
+        
+    Returns:
+        Formatted list of found contact information or no results message
+    """
     contacts = {}
     
     # Email pattern
@@ -331,9 +377,9 @@ def extract_contact(text: str) -> str:
         contacts['urls'] = list(set(urls))
     
     if not contacts:
-        return "📭 No contact information found"
+        return "No contact information found"
     
-    result = ["📞 Contact Information Found:"]
+    result = ["Contact Information Found:"]
     for contact_type, items in contacts.items():
         result.append(f"  {contact_type.title()}: {', '.join(items)}")
     
