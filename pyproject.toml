@@ -11,5 +11,8 @@ dependencies = [
     "langchain-community>=0.3.29",
     "langchain-core>=0.4.0.dev0",
     "langchain-ollama>=0.3.8",
+    "ollama>=0.6.0",
+    "pandas>=2.3.2",
     "psutil>=7.1.0",
+    "scikit-learn>=1.7.2",
 ]
