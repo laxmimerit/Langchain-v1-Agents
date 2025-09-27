@@ -236,20 +236,26 @@ def sensitive_info_tool(query: str) -> str:
 
 ## replace with ddgs news search
 @tool
-def slow_research(topic: str) -> str:
+def latest_news(topic: str) -> str:
     """Simulate a research operation that takes time."""
+    from ddgs import DDGS
     import time
     time.sleep(1)  # Simulate processing time
-    return f"Completed comprehensive research on: {topic}. Found multiple data points and analysis perspectives."
 
-## use here crawl4ai to get the full data after ddgs returns the basic results with the link
+    response = DDGS.news(query=topic, region='us-en', timelimit='d', max_results=5)
+    if not response:
+        return f"No news found for topic: {topic}"
+    
+    return response
 @tool
-def analyze_market(market: str) -> str:
-    """Simulate market analysis with processing time."""
-    import time
-    time.sleep(0.8)  # Simulate analysis time
-    return f"Market analysis complete for {market}: Current trends show positive growth indicators and strong market fundamentals."
+def analyze_market(url: str) -> str:
+    """Fetch the full content from the URL using Docling."""
 
+    from ollama import web_fetch
+    
+    result = web_fetch(url)
+    
+    return result
 
 @tool
 def analyze_text(text: str) -> str:
