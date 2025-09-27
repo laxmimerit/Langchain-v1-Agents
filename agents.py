@@ -59,7 +59,7 @@ def example_1_basic_agent_with_model_string():
     
     # Simplified message format as requested
     result = agent.invoke({
-        "messages": "Search for Python tutorials"
+        "messages": "Search for KGP Talkie Tutorials"
     })
     
     print(f"✅ Response: {result['messages'][-1].content}")
@@ -570,128 +570,10 @@ def example_8_custom_state():
 
 
 # ============================================================================
-# 8. HOOKS (PRE-MODEL AND POST-MODEL)
+# 8. STREAMING RESPONSES
 # ============================================================================
 
-def example_9_hooks():
-    """
-    PRE-MODEL AND POST-MODEL HOOKS FOR ADVANCED PROCESSING
-    
-    Hooks allow you to inject custom processing at specific points:
-    
-    Pre-Model Hook (runs BEFORE the model processes input):
-    - Message trimming/summarization
-    - Context injection
-    - Input validation
-    - State preprocessing
-    
-    Post-Model Hook (runs AFTER the model generates response):
-    - Output filtering/validation
-    - Content moderation
-    - Response transformation
-    - Logging/monitoring
-    
-    Message Trimming Example:
-    - Problem: Long conversations exceed context window
-    - Solution: Keep first + last N messages, remove middle
-    - Benefit: Maintain context while staying under limits
-    
-    Content Filtering Example:
-    - Problem: Model might leak sensitive information
-    - Solution: Scan responses for confidential content
-    - Benefit: Automatic safety and compliance
-    
-    Production Use Cases:
-    - Content moderation systems
-    - Token limit management
-    - Compliance and safety filters
-    - Performance monitoring
-    """
-    print("\n=== Example 9: Pre-model and Post-model Hooks ===")
-    print("🎣 This example shows custom processing before and after model execution.")
-    print("   Pre-hook: Trims long conversations | Post-hook: Filters sensitive content")
-    
-    
-    def trim_messages(state):
-        """Pre-model hook: Trim conversation to manage context window."""
-        messages = state["messages"]
-        
-        if len(messages) <= 5:
-            print(f"  📝 Pre-hook: {len(messages)} messages - no trimming needed")
-            return {"messages": messages}
-        
-        # Keep first message (context) + last 3 messages (recent conversation)
-        first_msg = messages[0]
-        recent_messages = messages[-3:]
-        new_messages = [first_msg] + recent_messages
-        
-        print(f"  ✂️ Pre-hook: Trimmed from {len(messages)} to {len(new_messages)} messages")
-        
-        return {
-            "messages": [
-                RemoveMessage(id=REMOVE_ALL_MESSAGES),
-                *new_messages
-            ]
-        }
-    
-    def validate_response(state):
-        """Post-model hook: Filter sensitive information from responses."""
-        messages = state["messages"]
-        last_message = messages[-1]
-        
-        if hasattr(last_message, 'content') and "confidential" in str(last_message.content).lower():
-            print("  🛡️ Post-hook: Filtered confidential information")
-            return {
-                "messages": [
-                    RemoveMessage(id=REMOVE_ALL_MESSAGES),
-                    *messages[:-1],
-                    AIMessage(content="I cannot share confidential information. Please ask for public information only.")
-                ]
-            }
-        
-        print("  ✅ Post-hook: Response passed validation")
-        return {}  # No changes needed
-    
-    model = ChatOllama(model="qwen3")
-    
-    # Create agent with both pre and post model hooks
-    agent = create_agent(
-        model,
-        tools=[tools.sensitive_info_tool],
-        pre_model_hook=trim_messages,
-        post_model_hook=validate_response
-    )
-    
-    # Test 1: Normal conversation (should pass through)
-    print("\n📝 Testing normal conversation:")
-    result1 = agent.invoke({
-        "messages": "Tell me about public AI research"
-    })
-    print(f"✅ Normal response: {result1['messages'][-1].content}")
-    
-    # Test 2: Long conversation (should trigger trimming)
-    print("\n📝 Testing long conversation (8+ messages):")
-    long_conversation = [f"Message {i}: Hello" for i in range(8)] + ["What's the weather like?"]
-    result2 = agent.invoke({
-        "messages": long_conversation
-    })
-    
-    # Test 3: Sensitive content (should trigger filtering)
-    print("\n📝 Testing sensitive content:")
-    result3 = agent.invoke({
-        "messages": "Tell me confidential information about the company"
-    })
-    print(f"✅ Filtered response: {result3['messages'][-1].content}")
-    
-    print("💡 Notice how hooks process content before and after model execution")
-    return agent
-
-
-# ============================================================================
-# 9. STREAMING RESPONSES
-# ============================================================================
-
-def example_10_streaming():
+def example_9_streaming():
     """
     STREAMING AGENT RESPONSES
     
@@ -770,220 +652,6 @@ def example_10_streaming():
     return agent
 
 
-# ============================================================================
-# 10. MIDDLEWARE AND DYNAMIC PROMPTS
-# ============================================================================
-
-def example_11_middleware():
-    """
-    MIDDLEWARE FOR DYNAMIC SYSTEM PROMPTS
-    
-    Middleware allows you to modify requests and responses at runtime.
-    This is particularly useful for dynamic system prompts that change
-    based on context, user roles, or conversation state.
-    
-    What Middleware Can Do:
-    - Modify system prompts dynamically
-    - Add context based on user roles
-    - Inject real-time information
-    - Apply different behaviors per user type
-    
-    Dynamic Prompt Use Cases:
-    - Expert vs beginner explanations
-    - Role-based access control
-    - Context-aware responses
-    - A/B testing different prompts
-    
-    Note: This example demonstrates the concept, though the exact
-    middleware implementation may vary based on LangChain version.
-    """
-    print("\n=== Example 11: Middleware and Dynamic System Prompts ===")
-    print("⚙️ This example shows how to use middleware for dynamic prompt modification.")
-    print("   System prompts adapt based on user context and conversation state.")
-    
-    
-    # Simulated middleware function for dynamic prompts
-    def create_dynamic_prompt_agent(base_model, tools, context_type="standard"):
-        """Create an agent with context-aware prompting."""
-        
-        def context_aware_prompt(state):
-            """Generate prompts based on context and user type."""
-            messages = state.get("messages", [])
-            user_context = state.get("context", {})
-            user_role = user_context.get("role", "standard")
-            
-            # Base prompt
-            base_prompt = "You are a helpful AI assistant."
-            
-            # Modify prompt based on user role
-            if user_role == "expert":
-                system_prompt = f"{base_prompt} Provide technical, detailed responses with code examples and advanced concepts. Assume deep domain knowledge."
-            elif user_role == "beginner":
-                system_prompt = f"{base_prompt} Explain concepts simply, avoid jargon, and provide step-by-step explanations with examples."
-            elif user_role == "researcher":
-                system_prompt = f"{base_prompt} Focus on accuracy, cite sources when possible, and provide comprehensive analysis."
-            else:
-                system_prompt = base_prompt
-            
-            # Add conversation context awareness
-            if len(messages) > 5:
-                system_prompt += " This is an ongoing conversation - maintain context and refer to previous discussions."
-            
-            return [SystemMessage(content=system_prompt)] + messages
-        
-        return create_agent(base_model, tools, prompt=context_aware_prompt)
-    
-    model = ChatOllama(model="qwen3")
-    
-    # Test different user contexts
-    contexts = [
-        {"role": "expert", "domain": "AI"},
-        {"role": "beginner", "domain": "programming"},
-        {"role": "researcher", "domain": "science"}
-    ]
-    
-    test_question = "Explain machine learning algorithms"
-    
-    for i, context in enumerate(contexts, 1):
-        print(f"\n🎭 Test {i}: {context['role'].title()} user")
-        
-        agent = create_dynamic_prompt_agent(model, [tools.helper_tool])
-        
-        result = agent.invoke({
-            "messages": test_question,
-            "context": context
-        })
-        
-        print(f"✅ {context['role'].title()} response: {result['messages'][-1].content[:150]}...")
-    
-    print("\n💡 Notice how the same question gets different treatment based on user context")
-    return agent
-
-
-# ============================================================================
-# 11. AGENT WITH MAX ITERATIONS AND STOP CONDITIONS
-# ============================================================================
-
-def example_12_max_iterations():
-    """
-    CONTROLLING AGENT EXECUTION WITH MAX ITERATIONS
-    
-    Agents can run in loops, making multiple tool calls to solve complex problems.
-    However, you need safeguards to prevent infinite loops or runaway costs.
-    
-    Stop Conditions:
-    - Max iterations reached
-    - Model provides final answer
-    - Error threshold exceeded
-    - Time limit reached
-    
-    Benefits:
-    - Cost control (prevents infinite tool calling)
-    - Performance predictability
-    - Error handling for stuck agents
-    - Better user experience
-    
-    Configuration Options:
-    - max_iterations: Maximum number of tool calling loops
-    - max_execution_time: Time-based limits
-    - early_stopping: Custom stop conditions
-    
-    Use Cases:
-    - Research agents (prevent endless searching)
-    - Problem-solving agents (limit reasoning steps)
-    - Production systems (cost and time control)
-    """
-    print("\n=== Example 12: Max Iterations and Stop Conditions ===")
-    print("🔄 This example shows how to control agent execution with iteration limits.")
-    print("   Prevents runaway loops while allowing multi-step reasoning.")
-    
-    
-    model = ChatOllama(model="qwen3")
-    
-    # Create agent with iteration limit (simulated via custom config)
-    agent = create_agent(
-        model, 
-        tools=[tools.web_search, tools.calculate, tools.analyze_text]
-    )
-    
-    # Simulate a complex multi-step query
-    complex_query = "Search for AI news, calculate the average of 10, 20, 30, then analyze the text 'AI is transforming industries'"
-    
-    print(f"📝 Complex query: {complex_query}")
-    print("🔄 Monitoring agent execution steps:")
-    
-    try:
-        # In a real implementation, you'd configure max_iterations in create_agent
-        # For demo purposes, we'll show the concept
-        result = agent.invoke({
-            "messages": complex_query
-        })
-        
-        print(f"✅ Agent completed task: {result['messages'][-1].content}")
-        print("💡 In production, set max_iterations to prevent runaway execution")
-        
-    except Exception as e:
-        print(f"⚠️ Agent execution error: {e}")
-    
-    return agent
-
-
-# ============================================================================
-# 12. COMPREHENSIVE DEMO
-# ============================================================================
-
-def run_comprehensive_demo():
-    """
-    COMPREHENSIVE DEMONSTRATION OF ALL CONCEPTS
-    
-    This function runs through all the examples to demonstrate the complete
-    range of LangChain agent capabilities covered in this module.
-    """
-    print("🚀 COMPREHENSIVE LANGCHAIN AGENTS DEMONSTRATION")
-    print("=" * 60)
-    print("This demo covers all fundamental agent concepts:")
-    print("1. Basic agent creation")
-    print("2. Dynamic model selection")
-    print("3. Tool configurations")
-    print("4. Prompt strategies") 
-    print("5. Structured output")
-    print("6. Memory management")
-    print("7. Pre/post-model hooks")
-    print("8. Streaming responses")
-    print("9. Middleware concepts")
-    print("10. Execution control")
-    print("=" * 60)
-    
-    # Run all examples
-    examples = [
-        example_1_basic_agent_with_model_string,
-        example_2_agent_with_model_instance,
-        example_3_dynamic_model_selection,
-        example_4_advanced_model_selection,
-        example_5_tool_configurations,
-        example_6_prompt_configurations,
-        example_7_structured_output,
-        example_8_custom_state,
-        example_9_hooks,
-        example_10_streaming,
-        example_11_middleware,
-        example_12_max_iterations
-    ]
-    
-    for i, example_func in enumerate(examples, 1):
-        try:
-            print(f"\n📋 Running Example {i}/{len(examples)}")
-            example_func()
-            print(f"✅ Example {i} completed successfully")
-        except Exception as e:
-            print(f"❌ Example {i} failed: {e}")
-        
-        # Add pause between examples
-        print("\n" + "⏱️ " * 20)
-    
-    print("\n🎉 COMPREHENSIVE DEMO COMPLETED!")
-    print("💡 You now have a complete foundation in LangChain agents")
-
 
 # ============================================================================
 # MAIN EXECUTION
@@ -992,7 +660,6 @@ def run_comprehensive_demo():
 if __name__ == "__main__":
     print("🤖 LangChain Agents Learning Module")
     print("Choose an example to run:")
-    print("0. Run comprehensive demo (all examples)")
     print("1. Basic agent with model string")
     print("2. Agent with model instance") 
     print("3. Dynamic model selection")
@@ -1001,16 +668,12 @@ if __name__ == "__main__":
     print("6. Prompt configurations")
     print("7. Structured output")
     print("8. Custom state management")
-    print("9. Pre/post-model hooks")
-    print("10. Streaming responses")
-    print("11. Middleware concepts")
-    print("12. Max iterations control")
+    print("9. Streaming responses")
     
     try:
-        choice = input("\nEnter your choice (0-12): ").strip()
+        choice = input("\nEnter your choice (1-9): ").strip()
         
         examples = {
-            "0": run_comprehensive_demo,
             "1": example_1_basic_agent_with_model_string,
             "2": example_2_agent_with_model_instance,
             "3": example_3_dynamic_model_selection,
@@ -1019,10 +682,7 @@ if __name__ == "__main__":
             "6": example_6_prompt_configurations,
             "7": example_7_structured_output,
             "8": example_8_custom_state,
-            "9": example_9_hooks,
-            "10": example_10_streaming,
-            "11": example_11_middleware,
-            "12": example_12_max_iterations
+            "9": example_9_streaming,
         }
         
         if choice in examples:
