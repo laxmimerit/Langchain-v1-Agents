@@ -1,4 +1,6 @@
-import tools
+def main():
+    print("Hello from langchain-v1-agents!")
 
-result = tools.web_search.invoke("LangChain agents", num_results=3)
-print(result)
+
+if __name__ == "__main__":
+    main()
