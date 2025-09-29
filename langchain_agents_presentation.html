@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LangChain V1 Agents - Technology Showcase</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 40px 0;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section h2 {
+            color: #5a67d8;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 900px) {
+            .tech-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .tech-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .tech-card {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #5a67d8;
+            transition: transform 0.3s ease;
+        }
+        
+        .tech-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .tech-card h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .tech-card .version {
+            background: #5a67d8;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        
+        .agent-architecture {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            padding: 30px;
+            border-radius: 15px;
+            color: #333;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .agent-flow {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 30px 0;
+        }
+        
+        .agent-component {
+            background: white;
+            border: 2px solid #5a67d8;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            min-width: 150px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .agent-component h4 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .arrow {
+            font-size: 2rem;
+            color: #5a67d8;
+        }
+        
+        .tools-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .tool-item {
+            background: #e6fffa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #38b2ac;
+        }
+        
+        .tool-item h4 {
+            color: #2c7a7b;
+            margin-bottom: 5px;
+        }
+        
+        .notebooks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+        
+        .notebook-card {
+            background: #fff5f5;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #e53e3e;
+        }
+        
+        .notebook-card h4 {
+            color: #c53030;
+            margin-bottom: 10px;
+        }
+        
+        .highlight {
+            background: #fed7d7;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #e53e3e;
+            margin: 20px 0;
+        }
+        
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .agent-flow {
+                flex-direction: column;
+            }
+            
+            .arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 LangChain V1 Agents</h1>
+            <p>Complete Technology Showcase & Agent Architecture</p>
+        </div>
+        
+        <div class="content">
+            <!-- Agent Architecture Section -->
+            <div class="section">
+                <h2>🏗️ Agent Architecture: The Core Trinity</h2>
+                <div class="agent-architecture">
+                    <h3>How LangChain Agents Work</h3>
+                    <div class="agent-flow">
+                        <div class="agent-component">
+                            <h4>📝 PROMPT</h4>
+                            <p>Instructions & Context</p>
+                            <small>System messages, user context, behavior guidelines</small>
+                        </div>
+                        <div class="arrow">➕</div>
+                        <div class="agent-component">
+                            <h4>🛠️ TOOLS</h4>
+                            <p>External Capabilities</p>
+                            <small>Web search, calculations, data analysis, APIs</small>
+                        </div>
+                        <div class="arrow">➕</div>
+                        <div class="agent-component">
+                            <h4>🧠 LLM</h4>
+                            <p>Language Model</p>
+                            <small>Qwen3, GPT-OSS, dynamic selection</small>
+                        </div>
+                        <div class="arrow">=</div>
+                        <div class="agent-component" style="background: #e6fffa; border-color: #38b2ac;">
+                            <h4>🤖 INTELLIGENT AGENT</h4>
+                            <p>Autonomous AI Assistant</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technology Stack -->
+            <div class="section">
+                <h2>🔧 Technology Stack</h2>
+                <div class="tech-grid">
+                    <div class="tech-card">
+                        <h3>🦜 LangChain</h3>
+                        <p><strong>Core Framework</strong></p>
+                        <ul>
+                            <li>Agent orchestration</li>
+                            <li>Tool integration</li>
+                            <li>Memory management</li>
+                            <li>Streaming support</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-card">
+                        <h3>🧠 Ollama</h3>
+                        <p><strong>Local LLM Runtime</strong></p>
+                        <ul>
+                            <li>Qwen3 (efficient)</li>
+                            <li>GPT-OSS (advanced)</li>
+                            <li>Dynamic model switching</li>
+                            <li>Local inference</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-card">
+                        <h3>🔍 DuckDuckGo</h3>
+                        <p><strong>Web Search</strong></p>
+                        <ul>
+                            <li>Real-time web search</li>
+                            <li>News aggregation</li>
+                            <li>Multi-backend support</li>
+                            <li>Privacy-focused</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-card">
+                        <h3>📊 Pandas</h3>
+                        <p><strong>Data Analysis</strong></p>
+                        <ul>
+                            <li>DataFrame operations</li>
+                            <li>Statistical analysis</li>
+                            <li>Data manipulation</li>
+                            <li>Dynamic operations</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-card">
+                        <h3>✅ Pydantic</h3>
+                        <p><strong>Data Validation</strong></p>
+                        <ul>
+                            <li>Structured output</li>
+                            <li>Type validation</li>
+                            <li>JSON serialization</li>
+                            <li>Model schemas</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-card">
+                        <h3>📓 Jupyter</h3>
+                        <p><strong>Interactive Development</strong></p>
+                        <ul>
+                            <li>Live code execution</li>
+                            <li>Incremental learning</li>
+                            <li>Rich documentation</li>
+                            <li>Visual outputs</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tools Ecosystem -->
+            <div class="section">
+                <h2>🛠️ Available Tools (10 Tools)</h2>
+                <div class="highlight">
+                    <p><strong>How Tools Connect to Agents:</strong> Each tool is decorated with <code>@tool</code> and automatically becomes available to agents. Agents can call multiple tools in sequence and combine their outputs for complex tasks.</p>
+                </div>
+                
+                <div class="tools-showcase">
+                    <div class="tool-item">
+                        <h4>🔍 web_search</h4>
+                        <p>DuckDuckGo integration for real-time web searches with multiple backends</p>
+                    </div>
+                    
+                    <div class="tool-item">
+                        <h4>📊 analyze_data</h4>
+                        <p>Dynamic pandas operations on DataFrames with safe evaluation</p>
+                    </div>
+                    
+                    <div class="tool-item">
+                        <h4>🧮 calculate</h4>
+                        <p>Safe mathematical expression evaluation with AST parsing</p>
+                    </div>
+                    
+                    <div class="tool-item">
+                        <h4>🆘 helper_tool</h4>
+                        <p>General assistance for various user requests and guidance</p>
+                    </div>
+                    
+                    <div class="tool-item">
+                        <h4>💾 save_user_preference</h4>
+                        <p>Persistent storage of user preferences with JSON serialization</p>
+                    </div>
+                    
+                    <div class="tool-item">
+                        <h4>📖 get_user_preference</h4>
+                        <p>Retrieval of saved user preferences for personalization</p>
+                    </div>
+                    
+                    <div class="tool-item">
+                        <h4>🔒 sensitive_info_tool</h4>
+                        <p>Secure information handling with sensitive content filtering</p>
+                    </div>
+                    
+                    <div class="tool-item">
+                        <h4>📰 latest_news</h4>
+                        <p>Real-time news aggregation using DuckDuckGo news API</p>
+                    </div>
+                    
+                    <div class="tool-item">
+                        <h4>📝 analyze_text</h4>
+                        <p>Text statistics and basic sentiment analysis with word counting</p>
+                    </div>
+                    
+                    <div class="tool-item">
+                        <h4>📞 extract_contact</h4>
+                        <p>Regex-based extraction of emails, phones, and URLs from text</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Structure -->
+            <div class="section">
+                <h2>📁 Project Notebooks (9 Learning Modules)</h2>
+                <div class="notebooks-grid">
+                    <div class="notebook-card">
+                        <h4>01. Basic Agent (Model String)</h4>
+                        <p>Simplest agent creation using model strings like "ollama:qwen3"</p>
+                    </div>
+                    
+                    <div class="notebook-card">
+                        <h4>02. Agent (Model Instance)</h4>
+                        <p>Explicit model configuration with custom parameters and settings</p>
+                    </div>
+                    
+                    <div class="notebook-card">
+                        <h4>03. Dynamic Model Selection</h4>
+                        <p>Automatic switching between Qwen3 and GPT-OSS based on conversation length</p>
+                    </div>
+                    
+                    <div class="notebook-card">
+                        <h4>04. Advanced Model Selection</h4>
+                        <p>Intelligent model choice using content analysis and keyword detection</p>
+                    </div>
+                    
+                    <div class="notebook-card">
+                        <h4>05. Tool Configurations</h4>
+                        <p>Different approaches to tool setup with error handling strategies</p>
+                    </div>
+                    
+                    <div class="notebook-card">
+                        <h4>06. Prompt Configurations</h4>
+                        <p>String, SystemMessage, and dynamic callable prompt methods</p>
+                    </div>
+                    
+                    <div class="notebook-card">
+                        <h4>07. Structured Output</h4>
+                        <p>Pydantic V2 models for validated, structured agent responses</p>
+                    </div>
+                    
+                    <div class="notebook-card">
+                        <h4>08. Custom State Management</h4>
+                        <p>Extended agent memory with user preferences and session data</p>
+                    </div>
+                    
+                    <div class="notebook-card">
+                        <h4>09. Streaming Responses</h4>
+                        <p>Real-time agent execution monitoring with live response streaming</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Code Example -->
+            <div class="section">
+                <h2>💻 Agent Creation Example</h2>
+                <div class="code-block">
+<pre># Simple Agent Creation with All Three Components
+from langchain_ollama import ChatOllama
+from langchain.agents import create_agent
+import tools
+
+# 1. LLM: Define the language model
+model = ChatOllama(model="qwen3", temperature=0.1)
+
+# 2. TOOLS: Select tools for the agent
+agent_tools = [tools.web_search, tools.calculate, tools.analyze_data]
+
+# 3. PROMPT: Define behavior (optional, can be string or callable)
+system_prompt = "You are a helpful research assistant."
+
+# Create Agent: Combining LLM + Tools + Prompt
+agent = create_agent(
+    model,           # LLM component
+    tools=agent_tools,   # Tools component  
+    prompt=system_prompt # Prompt component
+)
+
+# Use the agent
+result = agent.invoke({
+    "messages": "Search for AI news and calculate 25 * 4"
+})
+</pre>
+                </div>
+            </div>
+
+            <!-- Key Features -->
+            <div class="section">
+                <h2>🌟 Key Features & Benefits</h2>
+                <div class="tech-grid">
+                    <div class="tech-card">
+                        <h3>🎯 Smart Model Selection</h3>
+                        <p>Automatic switching between efficient and advanced models based on task complexity and conversation context</p>
+                    </div>
+                    
+                    <div class="tech-card">
+                        <h3>🔧 Rich Tool Ecosystem</h3>
+                        <p>10 specialized tools covering web search, data analysis, calculations, and content processing</p>
+                    </div>
+                    
+                    <div class="tech-card">
+                        <h3>📊 Structured Outputs</h3>
+                        <p>Pydantic V2 models ensure type-safe, validated responses perfect for API integration</p>
+                    </div>
+                    
+                    <div class="tech-card">
+                        <h3>🧠 Memory Management</h3>
+                        <p>Custom state schemas for persistent user preferences and session management</p>
+                    </div>
+                    
+                    <div class="tech-card">
+                        <h3>🚀 Real-time Streaming</h3>
+                        <p>Live response streaming to monitor agent thinking and tool execution process</p>
+                    </div>
+                    
+                    <div class="tech-card">
+                        <h3>📚 Learning Path</h3>
+                        <p>9 progressive notebooks from basic concepts to advanced implementations</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="section" style="text-align: center; margin-top: 60px;">
+                <h2>🚀 Ready to Build Intelligent Agents?</h2>
+                <p style="font-size: 1.1rem; color: #666; margin: 20px 0;">
+                    This project demonstrates the complete LangChain V1 ecosystem for building production-ready AI agents with dynamic model selection, comprehensive tool integration, and advanced state management.
+                </p>
+                <div style="background: #f0fff4; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <strong>🎯 Perfect for:</strong> AI developers, researchers, and anyone building intelligent automation systems with LangChain
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
