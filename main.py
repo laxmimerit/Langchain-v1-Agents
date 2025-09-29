@@ -1,6 +1,4 @@
-def main():
-    print("Hello from langchain-v1-agents!")
+from ddgs import DDGS
 
-
-if __name__ == "__main__":
-    main()
+results = DDGS().text("python programming", max_results=5)
+print(results)
