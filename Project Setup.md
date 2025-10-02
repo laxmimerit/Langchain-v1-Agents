@@ -19,6 +19,7 @@ uv add --prerelease=allow -U langchain langchain-community langchain-core langgr
 Local LLM Serving with Ollama
 ```bash
 ollama pull qwen3
+ollama pull gpt-oss
 ollama serve
 ```
 
