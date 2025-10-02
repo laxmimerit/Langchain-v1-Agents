@@ -164,3 +164,16 @@ def analyze_data(data: list, operation: str) -> str:
         return f"Invalid reference: {e}"
     except Exception as e:
         return f"Error: {str(e)}"
+
+
+@tool
+def helper_tool(request: str) -> str:
+    """General helper tool for various assistance requests.
+    
+    Args:
+        request: Description of what help is needed
+        
+    Returns:
+        Response offering to help with the specific request
+    """
+    return f"I can help you with: {request}. What specific assistance do you need?"
