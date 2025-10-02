@@ -185,7 +185,7 @@ class ToolConfig:
     """Configuration for tools with API keys and settings."""
     def __init__(self):
         self.user_preferences = {}
-        self.temp_dir = os.path.join(os.path.dirname(__file__), 'langchain_tools')
+        self.temp_dir = Path(os.path.join(os.path.dirname(__file__), 'langchain_tools'))
         self.temp_dir.mkdir(exist_ok=True)
 
 config = ToolConfig()
