@@ -177,3 +177,63 @@ def helper_tool(request: str) -> str:
         Response offering to help with the specific request
     """
     return f"I can help you with: {request}. What specific assistance do you need?"
+
+
+# Configuration
+import os
+class ToolConfig:
+    """Configuration for tools with API keys and settings."""
+    def __init__(self):
+        self.user_preferences = {}
+        self.temp_dir = os.path.join(os.path.dirname(__file__), 'langchain_tools')
+        self.temp_dir.mkdir(exist_ok=True)
+
+config = ToolConfig()
+prefs_file = config.temp_dir / "user_preferences.json"
+
+@tool
+def save_user_preference(key: str, value: str) -> str:
+    """Save a user preference to persistent storage.
+    
+    Args:
+        key: Preference key name
+        value: Preference value
+        
+    Returns:
+        Success message or error description
+    """
+    try:
+        config.user_preferences[key] = value
+        
+        # Save to file for persistence
+        with open(prefs_file, 'w') as f:
+            json.dump(config.user_preferences, f, indent=2)
+        
+        return f"Saved preference: {key} = {value}"
+    except Exception as e:
+        return f"Error saving preference: {str(e)}"
+
+
+@tool
+def get_user_preference(key: str) -> str:
+    """Retrieve a saved user preference from storage.
+    
+    Args:
+        key: Preference key name to retrieve
+        
+    Returns:
+        Preference value or error message if not found
+    """
+    try:
+        # Load from file if not in memory
+        if not config.user_preferences:
+            if prefs_file.exists():
+                with open(prefs_file, 'r') as f:
+                    config.user_preferences = json.load(f)
+        
+        if key in config.user_preferences:
+            return f"{key}: {config.user_preferences[key]}"
+        else:
+            return f"No preference found for: {key}"
+    except Exception as e:
+        return f"Error retrieving preference: {str(e)}"
