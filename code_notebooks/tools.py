@@ -107,3 +107,60 @@ def calculate(expression: str) -> str:
         return "Error: Division by zero"
     except Exception as e:
         return f"Error: {str(e)}"
+
+
+@tool
+def analyze_data(data: list, operation: str) -> str:
+    """
+    Dynamic pandas data analysis tool.
+    
+    Args:
+        data: List of dictionaries to convert to DataFrame
+        operation: Pandas operation string (e.g., 'df.describe()', 'df.groupby("col").sum()')
+    
+    Returns:
+        String representation of analysis result or error message
+    """
+    try:
+        import pandas as pd
+        import numpy as np
+    except ImportError as e:
+        return f"Missing dependency: {e}"
+    
+    try:
+        if not data or not isinstance(data, list):
+            return "Data must be a non-empty list"
+        
+        # Convert to DataFrame
+        try:
+            df = pd.DataFrame(data)
+        except Exception as e:
+            return f"Failed to create DataFrame: {str(e)}"
+        
+        if df.empty:
+            return "Empty DataFrame created"
+        
+        # Default operation
+        if not operation or not isinstance(operation, str):
+            operation = "df.describe()"
+        
+        # Basic validation - operation should reference 'df'
+        if 'df' not in operation:
+            return "Operation must reference 'df' (the DataFrame)"
+        
+        # Execute operation with restricted namespace
+        namespace = {'df': df, 'pd': pd, 'np': np}
+        result = eval(operation, {"__builtins__": {}}, namespace)
+        
+        # Format result
+        if isinstance(result, (pd.DataFrame, pd.Series)):
+            return result.to_string()
+        else:
+            return str(result)
+            
+    except SyntaxError:
+        return "Invalid operation syntax"
+    except NameError as e:
+        return f"Invalid reference: {e}"
+    except Exception as e:
+        return f"Error: {str(e)}"
